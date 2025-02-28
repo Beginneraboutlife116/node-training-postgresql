@@ -72,12 +72,22 @@ const requestListener = async (req, res) => {
           price,
         });
 
-        const result = await creditPackageRepo.save(newCreditPackage);
+        const {
+          id,
+          name: newName,
+          credit_amount: newCreditAmount,
+          price: newPrice,
+        } = await creditPackageRepo.save(newCreditPackage);
 
         res.writeHead(201, headers);
         res.write(JSON.stringify({
           status: "success",
-          data: result,
+          data: {
+            id,
+            name: newName,
+            credit_amount: newCreditAmount,
+            price: newPrice,
+          },
         }));
         res.end();
       })
@@ -151,12 +161,15 @@ const requestListener = async (req, res) => {
         }
 
         const newSkill = await skillRepo.create({ name });
-        const result = await skillRepo.save(newSkill);
+        const { id, name: newName } = await skillRepo.save(newSkill);
 
         res.writeHead(200, headers);
         res.write(JSON.stringify({
           status: "success",
-          data: result
+          data: {
+            id,
+            name: newName,
+          }
         }));
         res.end();
       });
