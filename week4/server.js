@@ -1,9 +1,13 @@
 require("dotenv").config();
 const http = require("http");
 const isString = require("lodash/isString");
-const isNumber = require("lodash/isNumber");
+const isInteger = require("lodash/isInteger");
 const isUndefined = require("lodash/isUndefined");
 const AppDataSource = require("./db");
+
+const isNotValidString = (value) => !isString(value) || value.trim() === "";
+
+const isNotValidInteger = (value) => !isInteger(value) || value < 0;
 
 const requestListener = async (req, res) => {
   const headers = {
@@ -36,9 +40,9 @@ const requestListener = async (req, res) => {
       req.on("end", async () => {
         const { name, credit_amount, price } = JSON.parse(body);
 
-        if ((isUndefined(name) || !isString(name)) ||
-          (isUndefined(credit_amount) || !isNumber(credit_amount)) ||
-          (isUndefined(price) || !isNumber(price))) {
+        if (isUndefined(name) || isNotValidString(name) ||
+          isUndefined(credit_amount) || isNotValidInteger(credit_amount) ||
+          isUndefined(price) || isNotValidInteger(price)) {
           res.writeHead(400, headers);
           res.write(JSON.stringify({
             status: "failed",
@@ -80,7 +84,7 @@ const requestListener = async (req, res) => {
     } else if (req.url.startsWith("/api/credit-package/") && req.method === "DELETE") {
       const id = req.url.split("/").pop();
 
-      if (isUndefined(id) || !isString(id)) {
+      if (isUndefined(id) || isNotValidString(id)) {
         res.writeHead(400, headers);
         res.write(JSON.stringify({
           status: "failed",
@@ -105,6 +109,85 @@ const requestListener = async (req, res) => {
       res.writeHead(200, headers);
       res.write(JSON.stringify({
         status: "success",
+      }));
+      res.end();
+    } else if (req.url === "/api/coaches/skill" && req.method === "GET") {
+      const skills = await skillRepo.find({
+        select: ["id", "name"]
+      });
+
+      res.writeHead(200, headers);
+      res.write(JSON.stringify({
+        status: "success",
+        data: skills,
+      }));
+      res.end();
+    } else if (req.url === "/api/coaches/skill" && req.method === "POST") {
+      req.on('end', async () => {
+        const { name } = JSON.parse(body);
+
+        if (isUndefined(name) || isNotValidString(name)) {
+          res.writeHead(400, headers);
+          res.write(JSON.stringify({
+            status: "failed",
+            message: "欄位未填寫正確",
+          }));
+          res.end();
+          return;
+        }
+
+        const existedSkills = await skillRepo.find({
+          where: { name }
+        });
+
+        if (existedSkills.length > 0) {
+          res.writeHead(409, headers);
+          res.write(JSON.stringify({
+            status: "failed",
+            message: "資料重複"
+          }));
+          res.end();
+          return;
+        }
+
+        const newSkill = await skillRepo.create({ name });
+        const result = await skillRepo.save(newSkill);
+
+        res.writeHead(200, headers);
+        res.write(JSON.stringify({
+          status: "success",
+          data: result
+        }));
+        res.end();
+      });
+    } else if (req.url.startsWith("/api/coaches/skill/") && req.method === "DELETE") {
+      const id = req.url.split("/").pop();
+
+      if (isUndefined(id) || isNotValidString(id)) {
+        res.writeHead(400, headers);
+        res.write(JSON.stringify({
+          status: "failed",
+          message: "ID錯誤"
+        }));
+        res.end();
+        return;
+      }
+
+      const result = await skillRepo.delete(id);
+
+      if (result.affected === 0) {
+        res.writeHead(400, headers);
+        res.write(JSON.stringify({
+          status: "failed",
+          message: "ID錯誤"
+        }));
+        res.end();
+        return;
+      }
+
+      res.writeHead(200, headers);
+      res.write(JSON.stringify({
+        status: "success"
       }));
       res.end();
     } else if (req.method === "OPTIONS") {
