@@ -3,11 +3,15 @@ const http = require("http");
 const isString = require("lodash/isString");
 const isInteger = require("lodash/isInteger");
 const isUndefined = require("lodash/isUndefined");
+const { validate: uuidValidate } = require('uuid');
+
 const AppDataSource = require("./db");
 
 const isNotValidString = (value) => !isString(value) || value.trim() === "";
 
 const isNotValidInteger = (value) => !isInteger(value) || value < 0;
+
+const isNotValidUUID = (value) => !uuidValidate(value)
 
 const requestListener = async (req, res) => {
   const headers = {
@@ -94,7 +98,7 @@ const requestListener = async (req, res) => {
     } else if (req.url.startsWith("/api/credit-package/") && req.method === "DELETE") {
       const id = req.url.split("/").pop();
 
-      if (isUndefined(id) || isNotValidString(id)) {
+      if (isUndefined(id) || isNotValidString(id) || isNotValidUUID(id)) {
         res.writeHead(400, headers);
         res.write(JSON.stringify({
           status: "failed",
@@ -176,7 +180,7 @@ const requestListener = async (req, res) => {
     } else if (req.url.startsWith("/api/coaches/skill/") && req.method === "DELETE") {
       const id = req.url.split("/").pop();
 
-      if (isUndefined(id) || isNotValidString(id)) {
+      if (isUndefined(id) || isNotValidString(id) || isNotValidUUID(id)) {
         res.writeHead(400, headers);
         res.write(JSON.stringify({
           status: "failed",
