@@ -1,5 +1,9 @@
 const { EntitySchema } = require('typeorm')
 
+const { USER_ROLE } = require('../lib/enums');
+
+const { USER } = USER_ROLE
+
 module.exports = new EntitySchema({
 	name: 'User',
 	tableName: 'USER',
@@ -25,7 +29,7 @@ module.exports = new EntitySchema({
 			type: 'varchar',
 			length: 20,
 			nullable: false,
-			default: 'user'
+			default: USER
 		},
 		password: {
 			type: 'varchar',
