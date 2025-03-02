@@ -7,15 +7,100 @@ const logger = require('../utils/logger')('Admin');
 const {
 	isNotValidString,
 	isNotValidInteger,
-	isNotValidImageURL,
 	isNotValidUUID,
+	isNotValidImageURL,
+	isNotValidDate,
+	isNotValidURL,
+	isNotValidTimeStartAndEnd,
 } = require('../utils/validators');
+const errorHandler = require('../utils/error-handler');
 const { USER_ROLE } = require('../lib/enums');
 
 const UserRepo = dataSource.getRepository('User');
 const CoachRepo = dataSource.getRepository('Coach');
+const SkillRepo = dataSource.getRepository('Skill');
+const CourseRepo = dataSource.getRepository('Course');
 
 const { COACH } = USER_ROLE;
+
+router.post('/coaches/course', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
+	try {
+		const {
+			user_id,
+			skill_id,
+			name,
+			description,
+			start_at,
+			end_at,
+			max_participants,
+			meeting_url
+		} = req.body;
+
+		if (isNotValidString(name) ||
+			isNotValidString(description) ||
+			isNotValidString(meeting_url) ||
+			isNotValidUUID(skill_id) ||
+			isNotValidUUID(user_id) ||
+			isNotValidInteger(max_participants)) {
+			wrappedErrorHandler(400, '欄位未填寫正確');
+			return;
+		}
+
+		if (isNotValidURL(meeting_url)) {
+			wrappedErrorHandler(400, '欄位未填寫正確');
+			return;
+		}
+
+		if (isNotValidDate(start_at) || isNotValidDate(end_at) || isNotValidTimeStartAndEnd(start_at, end_at)) {
+			wrappedErrorHandler(400, '欄位未填寫正確');
+			return;
+		}
+
+		const foundUser = await UserRepo.findOne({
+			where: { id: user_id }
+		});
+		const foundSkill = await SkillRepo.findOne({
+			where: { id: skill_id }
+		});
+
+		if (!foundSkill) {
+			wrappedErrorHandler(400, '教練專長不存在');
+			return;
+		}
+
+		if (!foundUser) {
+			wrappedErrorHandler(400, '使用者不存在');
+			return;
+		}
+
+		if (foundUser.role !== COACH) {
+			wrappedErrorHandler(400, '使用者尚未成為教練');
+			return;
+		}
+
+		const newCourse = CourseRepo.create({
+			user_id,
+			skill_id,
+			name,
+			description,
+			start_at,
+			end_at,
+			max_participants,
+			meeting_url
+		});
+		const result = await CourseRepo.save(newCourse);
+
+		res.status(201).json({
+			status: 'success',
+			data: result
+		});
+	} catch (error) {
+		logger.error(error);
+		next(error);
+	}
+})
 
 router.post('/coaches/:userId', async (req, res, next) => {
 	try {

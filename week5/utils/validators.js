@@ -2,6 +2,7 @@ const isString = require('lodash/isString')
 const isInteger = require('lodash/isInteger')
 const isUndefined = require('lodash/isUndefined')
 const { validate: uuidValidate } = require('uuid')
+const dayjs = require('dayjs')
 
 const isNotValidString = (value) => isUndefined(value) || !isString(value) || value.trim() === '';
 
@@ -15,6 +16,12 @@ const isNotValidPassword = (value) => isNotValidString(value) || !/(?=.*\d)(?=.*
 
 const isNotValidImageURL = (value) => isNotValidString(value) || !(/\.(jpg|png)$/.test(value));
 
+const isNotValidDate = (value) => isNotValidString(value) || !dayjs(value).isValid();
+
+const isNotValidURL = (value) => isNotValidString(value) || !(/^(http|https):\/\/[^ "]+$/.test(value));
+
+const isNotValidTimeStartAndEnd = (start, end) => !dayjs(start).isBefore(end);
+
 module.exports = {
 	isNotValidString,
 	isNotValidInteger,
@@ -22,4 +29,7 @@ module.exports = {
 	isNotValidEmail,
 	isNotValidPassword,
 	isNotValidImageURL,
+	isNotValidDate,
+	isNotValidURL,
+	isNotValidTimeStartAndEnd,
 }
