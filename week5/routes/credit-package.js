@@ -31,8 +31,9 @@ router.get('/', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
 	try {
 		const { name, credit_amount, price } = req.body;
+		const trimName = name.trim();
 
-		if (isNotValidString(name) || isNotValidInteger(credit_amount) || isNotValidInteger(price)) {
+		if (isNotValidString(trimName) || isNotValidInteger(credit_amount) || isNotValidInteger(price)) {
 			res.status(400).json({
 				status: 'failed',
 				message: '欄位未填寫正確',
@@ -40,11 +41,11 @@ router.post('/', async (req, res, next) => {
 			return;
 		}
 
-		const foundCreditPackages = await CreditPackageRepo.find({
-			where: { name },
+		const isCreditPackageExist = await CreditPackageRepo.findOne({
+			where: { name: trimName },
 		});
 
-		if (foundCreditPackages.length > 0) {
+		if (isCreditPackageExist) {
 			res.status(409).json({
 				status: 'failed',
 				message: '資料重複',
@@ -52,20 +53,20 @@ router.post('/', async (req, res, next) => {
 			return;
 		}
 
-		const newCreditPackage = await CreditPackageRepo.create({
-			name,
+		const newCreditPackage = CreditPackageRepo.create({
+			name: trimName,
 			credit_amount,
 			price,
 		});
-		const { id } = await CreditPackageRepo.save(newCreditPackage);
+		const result = await CreditPackageRepo.save(newCreditPackage);
 
 		res.status(200).json({
 			status: 'success',
 			data: {
-				id,
-				name,
-				credit_amount,
-				price,
+				id: result.id,
+				name: result.name,
+				credit_amount: result.credit_amount,
+				price: result.price,
 			},
 		});
 	} catch (error) {
