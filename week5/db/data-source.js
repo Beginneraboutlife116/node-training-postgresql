@@ -1,7 +1,7 @@
 const { DataSource } = require('typeorm')
 const config = require('../config/index')
 
-const CreditPackageEntity = require('../entities/credit-packages');
+const CreditPackageEntity = require('../entities/credit-package');
 const SkillEntity = require('../entities/skill')
 
 const dataSource = new DataSource({
