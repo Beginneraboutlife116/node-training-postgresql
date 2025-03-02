@@ -38,17 +38,12 @@ router.post('/coaches/course', async (req, res, next) => {
 			meeting_url
 		} = req.body;
 
-		if (isNotValidString(name) ||
-			isNotValidString(description) ||
-			isNotValidString(meeting_url) ||
+		if (isNotValidUUID(user_id) ||
 			isNotValidUUID(skill_id) ||
-			isNotValidUUID(user_id) ||
-			isNotValidInteger(max_participants)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
-		}
-
-		if (isNotValidURL(meeting_url)) {
+			isNotValidString(name) ||
+			isNotValidString(description) ||
+			isNotValidInteger(max_participants) ||
+			isNotValidURL(meeting_url)) {
 			wrappedErrorHandler(400, '欄位未填寫正確');
 			return;
 		}
