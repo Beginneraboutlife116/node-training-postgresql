@@ -103,31 +103,24 @@ router.post('/coaches/course', async (req, res, next) => {
 })
 
 router.post('/coaches/:userId', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
 	try {
 		const { userId } = req.params;
 		const { experience_years, description, profile_image_url } = req.body;
 
 		if (isNotValidInteger(experience_years) || isNotValidString(description)) {
-			res.status(400).json({
-				status: 'failed',
-				message: '欄位未填寫正確'
-			});
+			wrappedErrorHandler(400, '欄位未填寫正確');
 			return;
 		}
 
 		if (profile_image_url !== '' && isNotValidImageURL(profile_image_url)) {
-			res.status(400).json({
-				status: 'failed',
-				message: '欄位未填寫正確'
-			});
+			wrappedErrorHandler(400, '欄位未填寫正確');
 			return;
 		}
 
 		if (isNotValidUUID(userId)) {
-			res.status(400).json({
-				status: 'failed',
-				message: '使用者不存在'
-			});
+			wrappedErrorHandler(400, '使用者不存在');
 			return;
 		}
 
@@ -136,18 +129,12 @@ router.post('/coaches/:userId', async (req, res, next) => {
 		})
 
 		if (!foundUser) {
-			res.status(400).json({
-				status: 'failed',
-				message: '使用者不存在'
-			});
+			wrappedErrorHandler(400, '使用者不存在');
 			return;
 		}
 
 		if (foundUser.role === COACH) {
-			res.status(409).json({
-				status: 'failed',
-				message: '使用者已經是教練'
-			});
+			wrappedErrorHandler(409, '使用者已經是教練');
 			return;
 		}
 
@@ -156,10 +143,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
 		}, { role: COACH });
 
 		if (updateUserResult.affected === 0) {
-			res.status(400).json({
-				status: 'failed',
-				message: '更新使用者失敗'
-			});
+			wrappedErrorHandler(400, '更新使用者失敗');
 			return;
 		}
 
@@ -168,7 +152,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
 			experience_years,
 			description,
 			profile_image_url,
-		})
+		});
 		const coachResult = await CoachRepo.save(newCoach);
 		const { name, role } = await UserRepo.findOne({
 			where: { id: userId }
