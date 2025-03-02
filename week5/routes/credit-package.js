@@ -9,6 +9,7 @@ const {
 	isNotValidInteger,
 	isNotValidUUID,
 } = require('../utils/validators');
+const errorHandler = require('../utils/error-handler');
 
 const CreditPackageRepo = dataSource.getRepository('CreditPackage')
 
@@ -29,11 +30,12 @@ router.get('/', async (req, res, next) => {
 })
 
 router.post('/', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
 	try {
 		const { name, credit_amount, price } = req.body;
-		const trimName = name.trim();
 
-		if (isNotValidString(trimName) || isNotValidInteger(credit_amount) || isNotValidInteger(price)) {
+		if (isNotValidString(name) || isNotValidInteger(credit_amount) || isNotValidInteger(price)) {
 			res.status(400).json({
 				status: 'failed',
 				message: '欄位未填寫正確',
@@ -42,19 +44,16 @@ router.post('/', async (req, res, next) => {
 		}
 
 		const isCreditPackageExist = await CreditPackageRepo.findOne({
-			where: { name: trimName },
+			where: { name },
 		});
 
 		if (isCreditPackageExist) {
-			res.status(409).json({
-				status: 'failed',
-				message: '資料重複',
-			});
+			wrappedErrorHandler(409, '資料重複');
 			return;
 		}
 
 		const newCreditPackage = CreditPackageRepo.create({
-			name: trimName,
+			name,
 			credit_amount,
 			price,
 		});
@@ -76,24 +75,20 @@ router.post('/', async (req, res, next) => {
 })
 
 router.delete('/:creditPackageId', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
 	try {
 		const { creditPackageId } = req.params;
 
 		if (isNotValidUUID(creditPackageId)) {
-			res.status(400).json({
-				status: 'failed',
-				message: 'ID錯誤',
-			});
+			wrappedErrorHandler(400, 'ID錯誤');
 			return;
 		}
 
 		const result = await CreditPackageRepo.delete(creditPackageId);
 
 		if (result.affected === 0) {
-			res.status(400).json({
-				status: 'failed',
-				message: 'ID錯誤',
-			});
+			wrappedErrorHandler(400, 'ID錯誤');
 			return;
 		}
 

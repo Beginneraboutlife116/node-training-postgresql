@@ -8,6 +8,7 @@ const {
 	isNotValidString,
 	isNotValidUUID,
 } = require('../utils/validators');
+const errorHandler = require('../utils/error-handler');
 
 const SkillRepo = dataSource.getRepository('Skill')
 
@@ -16,6 +17,7 @@ router.get('/', async (req, res, next) => {
 		const skills = await SkillRepo.find({
 			select: ['id', 'name'],
 		})
+
 		res.status(200).json({
 			status: 'success',
 			data: skills,
@@ -27,34 +29,27 @@ router.get('/', async (req, res, next) => {
 })
 
 router.post('/', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
 	try {
 		const { name } = req.body
-		const trimName = name.trim()
 
-		if (isNotValidString(trimName)) {
-			res.status(400).json({
-				status: 'failed',
-				message: '欄位未填寫正確',
-			})
+		if (isNotValidString(name)) {
+			wrappedErrorHandler(400, '欄位未填寫正確');
 			return;
 		}
 
 		const isSkillExist = await SkillRepo.findOne({
-			where: { name: trimName },
+			where: { name },
 		})
 
 		if (isSkillExist) {
-			res.status(409).json({
-				status: 'failed',
-				message: '資料重複',
-			})
+			wrappedErrorHandler(409, '資料重複');
 			return;
 		}
 
-		const newSkill = await SkillRepo.create({
-			name: trimName,
-		})
-		const result = await SkillRepo.save(newSkill)
+		const newSkill = SkillRepo.create({ name });
+		const result = await SkillRepo.save(newSkill);
 
 		res.status(201).json({
 			status: 'success',
@@ -70,30 +65,26 @@ router.post('/', async (req, res, next) => {
 })
 
 router.delete('/:skillId', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
 	try {
 		const { skillId } = req.params
 
 		if (isNotValidUUID(skillId)) {
-			res.status(400).json({
-				status: 'failed',
-				message: 'ID錯誤',
-			})
+			wrappedErrorHandler(400, 'ID錯誤');
 			return;
 		}
 
 		const result = await SkillRepo.delete(skillId)
 
 		if (result.affected === 0) {
-			res.status(400).json({
-				status: 'failed',
-				message: 'ID錯誤',
-			})
+			wrappedErrorHandler(400, 'ID錯誤');
 			return;
 		}
 
 		res.status(200).json({
 			status: 'success',
-		})
+		});
 	} catch (error) {
 		logger.error(error)
 		next(error)

@@ -10,49 +10,41 @@ const {
 	isNotValidEmail,
 	isNotValidPassword,
 } = require('../utils/validators');
+const errorHandler = require('../utils/error-handler');
 
 const UserRepo = dataSource.getRepository('User');
 
 const saltRounds = 10;
 
 router.post('/signup', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
 	try {
 		const { email, password, name } = req.body
-		const trimName = name.trim()
-		const trimEmail = email.trim()
 
-		if (isNotValidString(trimName) || isNotValidEmail(trimEmail) || isNotValidString(password)) {
-			res.status(400).json({
-				status: 'failed',
-				message: '欄位未填寫正確'
-			})
+		if (isNotValidString(name) || isNotValidEmail(email) || isNotValidString(password)) {
+			wrappedErrorHandler(400, '欄位未填寫正確');
 			return;
 		}
 
 		if (isNotValidPassword(password)) {
-			res.status(400).json({
-				status: 'failed',
-				message: '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'
-			})
+			wrappedErrorHandler(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字');
 			return;
 		}
 
 		const isEmailExist = await UserRepo.findOne({
-			where: { email: trimEmail }
+			where: { email }
 		})
 
 		if (isEmailExist) {
-			res.status(409).json({
-				status: 'failed',
-				message: 'Email已被使用'
-			})
+			wrappedErrorHandler(409, 'Email已被使用');
 			return;
 		}
 
 		const hashPassword = await bcrypt.hash(password, saltRounds);
 		const newUser = UserRepo.create({
-			name: trimName,
-			email: trimEmail,
+			name,
+			email,
 			password: hashPassword,
 		});
 
