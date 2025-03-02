@@ -102,6 +102,80 @@ router.post('/coaches/course', async (req, res, next) => {
 	}
 })
 
+router.put('/coaches/course/:courseId', async (req, res, next) => {
+	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
+
+	try {
+		const { courseId } = req.params;
+		const {
+			skill_id,
+			name,
+			description,
+			start_at,
+			end_at,
+			max_participants,
+			meeting_url
+		} = req.body;
+
+		if (isNotValidUUID(skill_id) ||
+			isNotValidString(name) ||
+			isNotValidString(description) ||
+			isNotValidInteger(max_participants) ||
+			isNotValidURL(meeting_url)) {
+			wrappedErrorHandler(400, '欄位未填寫正確');
+			return;
+		}
+
+		if (isNotValidDate(start_at) || isNotValidDate(end_at) || isNotValidTimeStartAndEnd(start_at, end_at)) {
+			wrappedErrorHandler(400, '欄位未填寫正確');
+			return;
+		}
+
+		if (isNotValidUUID(courseId)) {
+			wrappedErrorHandler(400, '課程不存在');
+			return;
+		}
+
+		const foundCourse = await CourseRepo.findOne({
+			where: { id: courseId }
+		});
+
+		if (!foundCourse) {
+			wrappedErrorHandler(400, '課程不存在');
+			return;
+		}
+
+		const result = await CourseRepo.update({
+			id: courseId
+		}, {
+			skill_id,
+			name,
+			description,
+			start_at,
+			end_at,
+			max_participants,
+			meeting_url
+		});
+
+		if (result.affected === 0) {
+			wrappedErrorHandler(400, '更新課程失敗');
+			return;
+		}
+
+		const updatedCourse = await CourseRepo.findOne({
+			where: { id: courseId }
+		});
+
+		res.status(200).json({
+			status: 'success',
+			data: updatedCourse
+		});
+	} catch (error) {
+		logger.error(error);
+		next(error);
+	}
+});
+
 router.post('/coaches/:userId', async (req, res, next) => {
 	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
 
