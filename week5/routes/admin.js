@@ -60,13 +60,13 @@ router.post('/coaches/course', async (req, res, next) => {
 			where: { id: skill_id }
 		});
 
-		if (!foundSkill) {
-			wrappedErrorHandler(400, '教練專長不存在');
+		if (!foundUser) {
+			wrappedErrorHandler(400, '使用者不存在');
 			return;
 		}
 
-		if (!foundUser) {
-			wrappedErrorHandler(400, '使用者不存在');
+		if (!foundSkill) {
+			wrappedErrorHandler(400, '教練專長不存在');
 			return;
 		}
 
@@ -134,9 +134,17 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 		const foundCourse = await CourseRepo.findOne({
 			where: { id: courseId }
 		});
+		const foundSkill = await SkillRepo.findOne({
+			where: { id: skill_id }
+		});
 
 		if (!foundCourse) {
 			wrappedErrorHandler(400, '課程不存在');
+			return;
+		}
+
+		if (!foundSkill) {
+			wrappedErrorHandler(400, '教練專長不存在');
 			return;
 		}
 
@@ -234,13 +242,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
 					name,
 					role,
 				},
-				coach: {
-					id: coachResult.id,
-					user_id: coachResult.user_id,
-					experience_years: coachResult.experience_years,
-					description: coachResult.description,
-					profile_image_url: coachResult.profile_image_url,
-				}
+				coach: coachResult
 			}
 		})
 	} catch (error) {
