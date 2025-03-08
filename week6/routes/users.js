@@ -27,9 +27,7 @@ router.post('/signup', async (req, res, next) => {
 			return next(appError(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'));
 		}
 
-		const isEmailExist = await UserRepo.findOne({
-			where: { email }
-		})
+		const isEmailExist = await UserRepo.findOneBy({ email });
 
 		if (isEmailExist) {
 			return next(appError(409, 'Email已被使用'));

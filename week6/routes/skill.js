@@ -36,9 +36,7 @@ router.post('/', async (req, res, next) => {
 			return next(appError(400, '欄位未填寫正確'));
 		}
 
-		const isSkillExist = await SkillRepo.findOne({
-			where: { name },
-		})
+		const isSkillExist = await SkillRepo.findOneBy({ name });
 
 		if (isSkillExist) {
 			return next(appError(409, '資料重複'));

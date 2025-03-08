@@ -37,9 +37,7 @@ router.post('/', async (req, res, next) => {
 			return next(appError(400, '欄位未填寫正確'));
 		}
 
-		const isCreditPackageExist = await CreditPackageRepo.findOne({
-			where: { name },
-		});
+		const isCreditPackageExist = await CreditPackageRepo.findOneBy({ name });
 
 		if (isCreditPackageExist) {
 			return next(appError(409, '資料重複'));

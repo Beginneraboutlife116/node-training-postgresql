@@ -50,12 +50,8 @@ router.post('/coaches/course', async (req, res, next) => {
 			return next(appError(400, '欄位未填寫正確'));
 		}
 
-		const foundUser = await UserRepo.findOne({
-			where: { id: user_id }
-		});
-		const foundSkill = await SkillRepo.findOne({
-			where: { id: skill_id }
-		});
+		const foundUser = await UserRepo.findOneBy({ id: user_id });
+		const foundSkill = await SkillRepo.findOneBy({ id: skill_id });
 
 		if (!foundUser) {
 			return next(appError(400, '使用者不存在'));
@@ -120,12 +116,8 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 			return next(appError(400, '課程不存在'));
 		}
 
-		const foundCourse = await CourseRepo.findOne({
-			where: { id: courseId }
-		});
-		const foundSkill = await SkillRepo.findOne({
-			where: { id: skill_id }
-		});
+		const foundCourse = await CourseRepo.findOneBy({ id: courseId });
+		const foundSkill = await SkillRepo.findOneBy({ id: skill_id });
 
 		if (!foundCourse) {
 			return next(appError(400, '課程不存在'));
@@ -151,9 +143,7 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 			return next(appError(400, '更新課程失敗'));
 		}
 
-		const updatedCourse = await CourseRepo.findOne({
-			where: { id: courseId }
-		});
+		const updatedCourse = await CourseRepo.findOneBy({ id: courseId });
 
 		res.status(200).json({
 			status: 'success',
@@ -182,9 +172,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
 			return next(appError(400, '使用者不存在'));
 		}
 
-		const foundUser = await UserRepo.findOne({
-			where: { id: userId }
-		})
+		const foundUser = await UserRepo.findOneBy({ id: userId });
 
 		if (!foundUser) {
 			return next(appError(400, '使用者不存在'));
