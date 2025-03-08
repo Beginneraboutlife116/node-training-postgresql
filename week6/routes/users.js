@@ -10,26 +10,22 @@ const {
 	isNotValidEmail,
 	isNotValidPassword,
 } = require('../utils/validators');
-const errorHandler = require('../utils/error-handler');
+const appError = require('../utils/app-error');
 
 const UserRepo = dataSource.getRepository('User');
 
 const saltRounds = 10;
 
 router.post('/signup', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const { email, password, name } = req.body
 
 		if (isNotValidString(name) || isNotValidEmail(email) || isNotValidString(password)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		if (isNotValidPassword(password)) {
-			wrappedErrorHandler(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字');
-			return;
+			return next(appError(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'));
 		}
 
 		const isEmailExist = await UserRepo.findOne({
@@ -37,8 +33,7 @@ router.post('/signup', async (req, res, next) => {
 		})
 
 		if (isEmailExist) {
-			wrappedErrorHandler(409, 'Email已被使用');
-			return;
+			return next(appError(409, 'Email已被使用'));
 		}
 
 		const hashPassword = await bcrypt.hash(password, saltRounds);

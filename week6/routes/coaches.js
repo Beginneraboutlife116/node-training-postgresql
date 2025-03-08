@@ -9,13 +9,11 @@ const {
 	isNotValidInteger,
 	isNotValidUUID,
 } = require('../utils/validators');
-const errorHandler = require('../utils/error-handler');
+const appError = require('../utils/app-error');
 
 const CoachRepo = dataSource.getRepository('Coach');
 
 router.get('/', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const { per, page } = req.query;
 
@@ -23,8 +21,7 @@ router.get('/', async (req, res, next) => {
 			isNotValidString(page) ||
 			isNotValidInteger(parseInt(per)) ||
 			isNotValidInteger(parseInt(page))) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		const numberPer = parseInt(per);
@@ -48,14 +45,11 @@ router.get('/', async (req, res, next) => {
 });
 
 router.get('/:coachId', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const { coachId } = req.params;
 
 		if (isNotValidUUID(coachId)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		const coach = await CoachRepo.createQueryBuilder('ch')
@@ -65,8 +59,7 @@ router.get('/:coachId', async (req, res, next) => {
 			.getRawOne();
 
 		if (!coach) {
-			wrappedErrorHandler(404, '找不到該教練');
-			return;
+			return next(appError(404, '找不到該教練'));
 		}
 
 		const { name, role, ...coachData } = coach;

@@ -35,13 +35,22 @@ app.use('/api/users', usersRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/coaches', coachesRouter)
 
+app.use((req, res, next) => {
+  return res.status(404).json({
+    status: 'error',
+    message: '無此路由'
+  });
+})
+
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   req.log.error(err)
-  res.status(500).json({
-    status: 'error',
-    message: '伺服器錯誤'
-  })
+  const statusCode = err.status || 500;
+  const message = err.message || '伺服器錯誤';
+  res.status(statusCode).json({
+    status: statusCode === 500 ? 'error' : 'failed',
+    message
+  });
 })
 
 module.exports = app

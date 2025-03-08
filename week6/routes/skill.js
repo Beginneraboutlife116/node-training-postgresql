@@ -8,7 +8,7 @@ const {
 	isNotValidString,
 	isNotValidUUID,
 } = require('../utils/validators');
-const errorHandler = require('../utils/error-handler');
+const appError = require('../utils/app-error');
 
 const SkillRepo = dataSource.getRepository('Skill')
 
@@ -29,14 +29,11 @@ router.get('/', async (req, res, next) => {
 })
 
 router.post('/', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const { name } = req.body
 
 		if (isNotValidString(name)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		const isSkillExist = await SkillRepo.findOne({
@@ -44,8 +41,7 @@ router.post('/', async (req, res, next) => {
 		})
 
 		if (isSkillExist) {
-			wrappedErrorHandler(409, '資料重複');
-			return;
+			return next(appError(409, '資料重複'));
 		}
 
 		const newSkill = SkillRepo.create({ name });
@@ -65,21 +61,17 @@ router.post('/', async (req, res, next) => {
 })
 
 router.delete('/:skillId', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const { skillId } = req.params
 
 		if (isNotValidUUID(skillId)) {
-			wrappedErrorHandler(400, 'ID錯誤');
-			return;
+			return next(appError(400, 'ID錯誤'));
 		}
 
 		const result = await SkillRepo.delete(skillId)
 
 		if (result.affected === 0) {
-			wrappedErrorHandler(400, 'ID錯誤');
-			return;
+			return next(appError(400, 'ID錯誤'));
 		}
 
 		res.status(200).json({

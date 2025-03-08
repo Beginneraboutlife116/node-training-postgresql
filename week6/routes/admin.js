@@ -13,7 +13,8 @@ const {
 	isNotValidURL,
 	isNotValidTimeStartAndEnd,
 } = require('../utils/validators');
-const errorHandler = require('../utils/error-handler');
+const appError = require('../utils/app-error');
+
 const { USER_ROLE } = require('../lib/enums');
 
 const UserRepo = dataSource.getRepository('User');
@@ -24,8 +25,6 @@ const CourseRepo = dataSource.getRepository('Course');
 const { COACH } = USER_ROLE;
 
 router.post('/coaches/course', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const {
 			user_id,
@@ -44,13 +43,11 @@ router.post('/coaches/course', async (req, res, next) => {
 			isNotValidString(description) ||
 			isNotValidInteger(max_participants) ||
 			isNotValidURL(meeting_url)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		if (isNotValidDate(start_at) || isNotValidDate(end_at) || isNotValidTimeStartAndEnd(start_at, end_at)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		const foundUser = await UserRepo.findOne({
@@ -61,18 +58,15 @@ router.post('/coaches/course', async (req, res, next) => {
 		});
 
 		if (!foundUser) {
-			wrappedErrorHandler(400, '使用者不存在');
-			return;
+			return next(appError(400, '使用者不存在'));
 		}
 
 		if (!foundSkill) {
-			wrappedErrorHandler(400, '教練專長不存在');
-			return;
+			return next(appError(400, '教練專長不存在'));
 		}
 
 		if (foundUser.role !== COACH) {
-			wrappedErrorHandler(400, '使用者尚未成為教練');
-			return;
+			return next(appError(400, '使用者尚未成為教練'));
 		}
 
 		const newCourse = CourseRepo.create({
@@ -98,8 +92,6 @@ router.post('/coaches/course', async (req, res, next) => {
 })
 
 router.put('/coaches/course/:courseId', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const { courseId } = req.params;
 		const {
@@ -117,18 +109,15 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 			isNotValidString(description) ||
 			isNotValidInteger(max_participants) ||
 			isNotValidURL(meeting_url)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		if (isNotValidDate(start_at) || isNotValidDate(end_at) || isNotValidTimeStartAndEnd(start_at, end_at)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		if (isNotValidUUID(courseId)) {
-			wrappedErrorHandler(400, '課程不存在');
-			return;
+			return next(appError(400, '課程不存在'));
 		}
 
 		const foundCourse = await CourseRepo.findOne({
@@ -139,13 +128,11 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 		});
 
 		if (!foundCourse) {
-			wrappedErrorHandler(400, '課程不存在');
-			return;
+			return next(appError(400, '課程不存在'));
 		}
 
 		if (!foundSkill) {
-			wrappedErrorHandler(400, '教練專長不存在');
-			return;
+			return next(appError(400, '教練專長不存在'));
 		}
 
 		const result = await CourseRepo.update({
@@ -161,8 +148,7 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 		});
 
 		if (result.affected === 0) {
-			wrappedErrorHandler(400, '更新課程失敗');
-			return;
+			return next(appError(400, '更新課程失敗'));
 		}
 
 		const updatedCourse = await CourseRepo.findOne({
@@ -180,25 +166,20 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 });
 
 router.post('/coaches/:userId', async (req, res, next) => {
-	const wrappedErrorHandler = (statusCode, message) => errorHandler(res, statusCode, message);
-
 	try {
 		const { userId } = req.params;
 		const { experience_years, description, profile_image_url } = req.body;
 
 		if (isNotValidInteger(experience_years) || isNotValidString(description)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		if (profile_image_url !== '' && isNotValidImageURL(profile_image_url)) {
-			wrappedErrorHandler(400, '欄位未填寫正確');
-			return;
+			return next(appError(400, '欄位未填寫正確'));
 		}
 
 		if (isNotValidUUID(userId)) {
-			wrappedErrorHandler(400, '使用者不存在');
-			return;
+			return next(appError(400, '使用者不存在'));
 		}
 
 		const foundUser = await UserRepo.findOne({
@@ -206,13 +187,11 @@ router.post('/coaches/:userId', async (req, res, next) => {
 		})
 
 		if (!foundUser) {
-			wrappedErrorHandler(400, '使用者不存在');
-			return;
+			return next(appError(400, '使用者不存在'));
 		}
 
 		if (foundUser.role === COACH) {
-			wrappedErrorHandler(409, '使用者已經是教練');
-			return;
+			return next(appError(409, '使用者已經是教練'));
 		}
 
 		const updateUserResult = await UserRepo.update({
@@ -220,8 +199,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
 		}, { role: COACH });
 
 		if (updateUserResult.affected === 0) {
-			wrappedErrorHandler(400, '更新使用者失敗');
-			return;
+			return next(appError(400, '更新使用者失敗'));
 		}
 
 		const newCoach = CoachRepo.create({
