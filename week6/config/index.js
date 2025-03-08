@@ -3,13 +3,15 @@ const dotenv = require('dotenv')
 const result = dotenv.config()
 const db = require('./db')
 const web = require('./web')
+const crypt = require('./crypt')
 
 if (result.error) {
   throw result.error
 }
 const config = {
   db,
-  web
+  web,
+  crypt,
 }
 
 class ConfigManager {

@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 
-const router = express.Router()
+const config = require('../config/index');
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('User')
 
@@ -12,13 +12,12 @@ const {
 } = require('../utils/validators');
 const appError = require('../utils/app-error');
 
+const router = express.Router();
 const UserRepo = dataSource.getRepository('User');
-
-const saltRounds = 10;
 
 router.post('/signup', async (req, res, next) => {
 	try {
-		const { email, password, name } = req.body
+		const { email, password, name } = req.body;
 
 		if (isNotValidString(name) || isNotValidEmail(email) || isNotValidString(password)) {
 			return next(appError(400, '欄位未填寫正確'));
@@ -36,7 +35,7 @@ router.post('/signup', async (req, res, next) => {
 			return next(appError(409, 'Email已被使用'));
 		}
 
-		const hashPassword = await bcrypt.hash(password, saltRounds);
+		const hashPassword = await bcrypt.hash(password, config.get('crypt.saltRounds'));
 		const newUser = UserRepo.create({
 			name,
 			email,
