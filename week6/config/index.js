@@ -3,7 +3,7 @@ const dotenv = require('dotenv')
 const result = dotenv.config()
 const db = require('./db')
 const web = require('./web')
-const crypt = require('./crypt')
+const secret = require('./secret');
 
 if (result.error) {
   throw result.error
@@ -11,7 +11,7 @@ if (result.error) {
 const config = {
   db,
   web,
-  crypt,
+  secret,
 }
 
 class ConfigManager {
