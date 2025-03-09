@@ -1,9 +1,9 @@
 const express = require('express');
 
-const router = express.Router();
 const { dataSource } = require('../db/data-source');
-const logger = require('../utils/logger')('Admin');
 
+const logger = require('../utils/logger')('Admin');
+const appError = require('../utils/app-error');
 const {
 	isNotValidString,
 	isNotValidInteger,
@@ -13,10 +13,10 @@ const {
 	isNotValidURL,
 	isNotValidTimeStartAndEnd,
 } = require('../utils/validators');
-const appError = require('../utils/app-error');
 
 const { USER_ROLE } = require('../lib/enums');
 
+const router = express.Router();
 const UserRepo = dataSource.getRepository('User');
 const CoachRepo = dataSource.getRepository('Coach');
 const SkillRepo = dataSource.getRepository('Skill');
@@ -25,31 +25,30 @@ const CourseRepo = dataSource.getRepository('Course');
 const { COACH } = USER_ROLE;
 
 router.post('/coaches/course', async (req, res, next) => {
+	const {
+		user_id,
+		skill_id,
+		name,
+		description,
+		start_at,
+		end_at,
+		max_participants,
+		meeting_url
+	} = req.body;
+
+	if (isNotValidUUID(user_id) ||
+		isNotValidUUID(skill_id) ||
+		isNotValidString(name) ||
+		isNotValidString(description) ||
+		isNotValidInteger(max_participants) ||
+		isNotValidURL(meeting_url) ||
+		isNotValidDate(start_at) ||
+		isNotValidDate(end_at) ||
+		isNotValidTimeStartAndEnd(start_at, end_at)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
 	try {
-		const {
-			user_id,
-			skill_id,
-			name,
-			description,
-			start_at,
-			end_at,
-			max_participants,
-			meeting_url
-		} = req.body;
-
-		if (isNotValidUUID(user_id) ||
-			isNotValidUUID(skill_id) ||
-			isNotValidString(name) ||
-			isNotValidString(description) ||
-			isNotValidInteger(max_participants) ||
-			isNotValidURL(meeting_url)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
-		if (isNotValidDate(start_at) || isNotValidDate(end_at) || isNotValidTimeStartAndEnd(start_at, end_at)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
 		const foundUser = await UserRepo.findOneBy({ id: user_id });
 		const foundSkill = await SkillRepo.findOneBy({ id: skill_id });
 
@@ -88,34 +87,33 @@ router.post('/coaches/course', async (req, res, next) => {
 })
 
 router.put('/coaches/course/:courseId', async (req, res, next) => {
+	const { courseId } = req.params;
+	const {
+		skill_id,
+		name,
+		description,
+		start_at,
+		end_at,
+		max_participants,
+		meeting_url
+	} = req.body;
+
+	if (isNotValidUUID(skill_id) ||
+		isNotValidString(name) ||
+		isNotValidString(description) ||
+		isNotValidInteger(max_participants) ||
+		isNotValidURL(meeting_url) ||
+		isNotValidDate(start_at) ||
+		isNotValidDate(end_at) ||
+		isNotValidTimeStartAndEnd(start_at, end_at)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
+	if (isNotValidUUID(courseId)) {
+		return next(appError(400, '課程不存在'));
+	}
+
 	try {
-		const { courseId } = req.params;
-		const {
-			skill_id,
-			name,
-			description,
-			start_at,
-			end_at,
-			max_participants,
-			meeting_url
-		} = req.body;
-
-		if (isNotValidUUID(skill_id) ||
-			isNotValidString(name) ||
-			isNotValidString(description) ||
-			isNotValidInteger(max_participants) ||
-			isNotValidURL(meeting_url)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
-		if (isNotValidDate(start_at) || isNotValidDate(end_at) || isNotValidTimeStartAndEnd(start_at, end_at)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
-		if (isNotValidUUID(courseId)) {
-			return next(appError(400, '課程不存在'));
-		}
-
 		const foundCourse = await CourseRepo.findOneBy({ id: courseId });
 		const foundSkill = await SkillRepo.findOneBy({ id: skill_id });
 
@@ -156,22 +154,26 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 });
 
 router.post('/coaches/:userId', async (req, res, next) => {
+	const { userId } = req.params;
+	const {
+		experience_years,
+		description,
+		profile_image_url,
+	} = req.body;
+
+	if (isNotValidInteger(experience_years) || isNotValidString(description)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
+	if (profile_image_url !== '' && isNotValidImageURL(profile_image_url)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
+	if (isNotValidUUID(userId)) {
+		return next(appError(400, '使用者不存在'));
+	}
+
 	try {
-		const { userId } = req.params;
-		const { experience_years, description, profile_image_url } = req.body;
-
-		if (isNotValidInteger(experience_years) || isNotValidString(description)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
-		if (profile_image_url !== '' && isNotValidImageURL(profile_image_url)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
-		if (isNotValidUUID(userId)) {
-			return next(appError(400, '使用者不存在'));
-		}
-
 		const foundUser = await UserRepo.findOneBy({ id: userId });
 
 		if (!foundUser) {
@@ -197,9 +199,7 @@ router.post('/coaches/:userId', async (req, res, next) => {
 			profile_image_url,
 		});
 		const coachResult = await CoachRepo.save(newCoach);
-		const { name, role } = await UserRepo.findOne({
-			where: { id: userId }
-		})
+		const { name, role } = await UserRepo.findOneBy({ id: userId })
 		
 		res.status(201).json({
 			status: 'success',

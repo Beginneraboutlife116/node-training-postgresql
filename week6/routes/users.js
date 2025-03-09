@@ -16,17 +16,21 @@ const router = express.Router();
 const UserRepo = dataSource.getRepository('User');
 
 router.post('/signup', async (req, res, next) => {
+	const {
+		email,
+		password,
+		name,
+	} = req.body;
+
+	if (isNotValidString(name) || isNotValidEmail(email)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
+	if (isNotValidPassword(password)) {
+		return next(appError(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'));
+	}
+
 	try {
-		const { email, password, name } = req.body;
-
-		if (isNotValidString(name) || isNotValidEmail(email) || isNotValidString(password)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
-		if (isNotValidPassword(password)) {
-			return next(appError(400, '密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'));
-		}
-
 		const isEmailExist = await UserRepo.findOneBy({ email });
 
 		if (isEmailExist) {

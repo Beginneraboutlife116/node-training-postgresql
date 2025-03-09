@@ -1,29 +1,29 @@
 const express = require('express');
 
-const router = express.Router();
 const { dataSource } = require('../db/data-source');
-const logger = require('../utils/logger')('Coaches');
 
+const logger = require('../utils/logger')('Coaches');
+const appError = require('../utils/app-error');
 const {
 	isNotValidString,
 	isNotValidInteger,
 	isNotValidUUID,
 } = require('../utils/validators');
-const appError = require('../utils/app-error');
 
+const router = express.Router();
 const CoachRepo = dataSource.getRepository('Coach');
 
 router.get('/', async (req, res, next) => {
+	const { per, page } = req.query;
+
+	if (isNotValidString(per) ||
+		isNotValidString(page) ||
+		isNotValidInteger(parseInt(per)) ||
+		isNotValidInteger(parseInt(page))) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
 	try {
-		const { per, page } = req.query;
-
-		if (isNotValidString(per) ||
-			isNotValidString(page) ||
-			isNotValidInteger(parseInt(per)) ||
-			isNotValidInteger(parseInt(page))) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
 		const numberPer = parseInt(per);
 		const numberPage = parseInt(page);
 
@@ -45,13 +45,13 @@ router.get('/', async (req, res, next) => {
 });
 
 router.get('/:coachId', async (req, res, next) => {
+	const { coachId } = req.params;
+
+	if (isNotValidUUID(coachId)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
 	try {
-		const { coachId } = req.params;
-
-		if (isNotValidUUID(coachId)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
 		const coach = await CoachRepo.createQueryBuilder('ch')
 			.innerJoin('ch.user', 'u')
 			.where('ch.id = :coachId', { coachId })

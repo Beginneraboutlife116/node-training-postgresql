@@ -1,15 +1,15 @@
 const express = require('express')
 
-const router = express.Router()
 const { dataSource } = require('../db/data-source')
-const logger = require('../utils/logger')('Skill')
 
+const logger = require('../utils/logger')('Skill')
+const appError = require('../utils/app-error');
 const {
 	isNotValidString,
 	isNotValidUUID,
 } = require('../utils/validators');
-const appError = require('../utils/app-error');
 
+const router = express.Router();
 const SkillRepo = dataSource.getRepository('Skill')
 
 router.get('/', async (req, res, next) => {
@@ -29,13 +29,13 @@ router.get('/', async (req, res, next) => {
 })
 
 router.post('/', async (req, res, next) => {
+	const { name } = req.body
+
+	if (isNotValidString(name)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
 	try {
-		const { name } = req.body
-
-		if (isNotValidString(name)) {
-			return next(appError(400, '欄位未填寫正確'));
-		}
-
 		const isSkillExist = await SkillRepo.findOneBy({ name });
 
 		if (isSkillExist) {
@@ -59,13 +59,13 @@ router.post('/', async (req, res, next) => {
 })
 
 router.delete('/:skillId', async (req, res, next) => {
+	const { skillId } = req.params
+
+	if (isNotValidUUID(skillId)) {
+		return next(appError(400, 'ID錯誤'));
+	}
+
 	try {
-		const { skillId } = req.params
-
-		if (isNotValidUUID(skillId)) {
-			return next(appError(400, 'ID錯誤'));
-		}
-
 		const result = await SkillRepo.delete(skillId)
 
 		if (result.affected === 0) {

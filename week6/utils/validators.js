@@ -1,24 +1,36 @@
-const isString = require('lodash/isString')
-const isInteger = require('lodash/isInteger')
-const isUndefined = require('lodash/isUndefined')
-const { validate: uuidValidate } = require('uuid')
+const {
+	isInt,
+	isUUID,
+	isEmail,
+	isStrongPassword,
+	isURL,
+} = require('validator');
 const dayjs = require('dayjs')
 
-const isNotValidString = (value) => isUndefined(value) || !isString(value) || value.trim() === '';
+const isNotValidString = (value) => typeof value !== 'string' || value.trim() === '';
 
-const isNotValidInteger = (value) => isUndefined(value) || !isInteger(value) || value < 0;
+const isNotValidInteger = (value, options = {
+	gt: 0,
+}) => typeof value !== 'number' || !isInt(value.toString(), options);
 
-const isNotValidUUID = (value) => isNotValidString(value) || !uuidValidate(value);
+const isNotValidUUID = (value) => isNotValidString(value) || !isUUID(value);
 
-const isNotValidEmail = (value) => isNotValidString(value) || !(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+const isNotValidEmail = (value, options) => isNotValidString(value) || !isEmail(value, options);
 
-const isNotValidPassword = (value) => isNotValidString(value) || !/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}/.test(value);
+const isNotValidPassword = (value, options = {
+	minLength: 8,
+	maxLength: 16,
+	minLowercase: 1,
+	minUppercase: 1,
+	minNumbers: 1,
+	minSymbols: 0,
+}) => isNotValidString(value) || !isStrongPassword(value, options);
 
-const isNotValidImageURL = (value) => isNotValidString(value) || !(/\.(jpg|png)$/.test(value));
+const isNotValidURL = (value, options) => isNotValidString(value) || !isURL(value, options);
+
+const isNotValidImageURL = (value, options) => isNotValidURL(value, options) || !(/\.(jpg|png)$/.test(value));
 
 const isNotValidDate = (value) => isNotValidString(value) || !dayjs(value).isValid();
-
-const isNotValidURL = (value) => isNotValidString(value) || !(/^(http|https):\/\/[^ "]+$/.test(value));
 
 const isNotValidTimeStartAndEnd = (start, end) => !dayjs(start).isBefore(end);
 
