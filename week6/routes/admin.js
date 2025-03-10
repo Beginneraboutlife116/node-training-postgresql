@@ -2,6 +2,12 @@ const express = require('express');
 
 const { dataSource } = require('../db/data-source');
 
+const {
+	isAuth,
+	isCoach,
+	isAdmin,
+} = require('../middlewares/auth');
+
 const logger = require('../utils/logger')('Admin');
 const appError = require('../utils/app-error');
 const {
@@ -14,7 +20,7 @@ const {
 	isNotValidTimeStartAndEnd,
 } = require('../utils/validators');
 
-const { USER_ROLE } = require('../lib/enums');
+const { Role } = require('../lib/enums');
 
 const router = express.Router();
 const UserRepo = dataSource.getRepository('User');
@@ -22,9 +28,9 @@ const CoachRepo = dataSource.getRepository('Coach');
 const SkillRepo = dataSource.getRepository('Skill');
 const CourseRepo = dataSource.getRepository('Course');
 
-const { COACH } = USER_ROLE;
+const { COACH } = Role;
 
-router.post('/coaches/course', async (req, res, next) => {
+router.post('/coaches/course', [isAuth, isCoach], async (req, res, next) => {
 	const {
 		user_id,
 		skill_id,
@@ -86,7 +92,7 @@ router.post('/coaches/course', async (req, res, next) => {
 	}
 })
 
-router.put('/coaches/course/:courseId', async (req, res, next) => {
+router.put('/coaches/course/:courseId', [isAuth, isCoach], async (req, res, next) => {
 	const { courseId } = req.params;
 	const {
 		skill_id,
@@ -153,7 +159,7 @@ router.put('/coaches/course/:courseId', async (req, res, next) => {
 	}
 });
 
-router.post('/coaches/:userId', async (req, res, next) => {
+router.post('/coaches/:userId', [isAuth, isAdmin], async (req, res, next) => {
 	const { userId } = req.params;
 	const {
 		experience_years,
@@ -199,14 +205,13 @@ router.post('/coaches/:userId', async (req, res, next) => {
 			profile_image_url,
 		});
 		const coachResult = await CoachRepo.save(newCoach);
-		const { name, role } = await UserRepo.findOneBy({ id: userId })
 		
 		res.status(201).json({
 			status: 'success',
 			data: {
 				user: {
-					name,
-					role,
+					name: foundUser.name,
+					role: foundUser.role,
 				},
 				coach: coachResult
 			}
