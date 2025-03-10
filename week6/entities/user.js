@@ -1,8 +1,8 @@
 const { EntitySchema } = require('typeorm')
 
-const { USER_ROLE } = require('../lib/enums');
+const { Role } = require('../lib/enums');
 
-const { USER } = USER_ROLE
+const { USER } = Role;
 
 module.exports = new EntitySchema({
 	name: 'User',

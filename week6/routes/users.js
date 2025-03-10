@@ -2,6 +2,8 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const { matches } = require('validator');
 
+const config = require('../config/index');
+
 const { dataSource } = require('../db/data-source')
 
 const { isAuth } = require('../middlewares/auth');

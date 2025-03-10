@@ -1,8 +1,8 @@
-const USER_ROLE = {
+const Role = {
 	USER: 'USER',
 	COACH: 'COACH',
 }
 
 module.exports = {
-	USER_ROLE,
+	Role,
 }
