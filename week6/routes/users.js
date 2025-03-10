@@ -1,7 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const { matches } = require('validator');
 
 const { dataSource } = require('../db/data-source')
+
+const { isAuth } = require('../middlewares/auth');
 
 const logger = require('../utils/logger')('User')
 const appError = require('../utils/app-error');
@@ -105,6 +108,55 @@ router.post('/login', async (req, res, next) => {
 				}
 			}
 		});
+	} catch (error) {
+		logger.error(error);
+		next(error);
+	}
+})
+
+router.get('/profile', isAuth, async (req, res, next) => {
+	try {
+		const { id } = req.user;
+		const foundUser = await UserRepo.findOne({ where: { id }, select: ['email', 'name'] });
+
+		if (!foundUser) {
+			return next(appError(400, '使用者不存在'));
+		}
+
+		res.status(200).json({
+			status: 'success',
+			data: {
+				user: {
+					email: foundUser.email,
+					name: foundUser.name,
+				}
+			}
+		});
+	} catch (error) {
+		logger.error(error);
+		next(error);
+	}
+});
+
+router.put('/profile', isAuth, async (req, res, next) => {
+	const { id } = req.user;
+	const { name } = req.body;
+
+	if (isNotValidString(name) || !matches(name, /^[\w\u4e00-\u9fa5]{2,10}$/)) {
+		return next(appError(400, '欄位未填寫正確'));
+	}
+
+	try {
+		const updatedUser = await UserRepo.update({ id }, { name });
+
+		if (updatedUser.affected === 0) {
+			return next(appError(400, '更新使用者失敗'));
+		}
+
+		res.status(200).json({
+			status: 'success',
+		});
+
 	} catch (error) {
 		logger.error(error);
 		next(error);
