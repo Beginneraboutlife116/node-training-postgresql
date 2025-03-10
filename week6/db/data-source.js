@@ -1,4 +1,5 @@
 const { DataSource } = require('typeorm')
+
 const config = require('../config/index')
 
 const dataSource = new DataSource({
