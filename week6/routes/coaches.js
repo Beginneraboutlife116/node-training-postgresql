@@ -2,6 +2,8 @@ const express = require('express');
 
 const { dataSource } = require('../db/data-source');
 
+const { isAuth } = require('../middlewares/auth');
+
 const logger = require('../utils/logger')('Coaches');
 const appError = require('../utils/app-error');
 const {
@@ -13,7 +15,7 @@ const {
 const router = express.Router();
 const CoachRepo = dataSource.getRepository('Coach');
 
-router.get('/', async (req, res, next) => {
+router.get('/', isAuth, async (req, res, next) => {
 	const { per, page } = req.query;
 
 	if (isNotValidString(per) ||
@@ -44,7 +46,7 @@ router.get('/', async (req, res, next) => {
 	}
 });
 
-router.get('/:coachId', async (req, res, next) => {
+router.get('/:coachId', isAuth, async (req, res, next) => {
 	const { coachId } = req.params;
 
 	if (isNotValidUUID(coachId)) {
