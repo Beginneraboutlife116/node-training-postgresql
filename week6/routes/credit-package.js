@@ -2,34 +2,29 @@ const express = require('express')
 
 const { dataSource } = require('../db/data-source')
 
-const logger = require('../utils/logger')('CreditPackage');
 const appError = require('../utils/app-error');
 const {
 	isNotValidString,
 	isNotValidInteger,
 	isNotValidUUID,
 } = require('../utils/validators');
+const handleErrorAsync = require('../utils/handle-error-async');
 
 const router = express.Router();
 const CreditPackageRepo = dataSource.getRepository('CreditPackage');
 
-router.get('/', async (req, res, next) => {
-	try {
-		const creditPackages = await CreditPackageRepo.find({
-			select: ['id', 'name', 'credit_amount', 'price'],
-		});
+router.get('/', handleErrorAsync(async (req, res, next) => {
+	const creditPackages = await CreditPackageRepo.find({
+		select: ['id', 'name', 'credit_amount', 'price'],
+	});
 
-		res.status(200).json({
-			status: 'success',
-			data: creditPackages,
-		});
-	} catch (error) {
-		logger.error(error);
-		next(error);
-	}
-})
+	res.status(200).json({
+		status: 'success',
+		data: creditPackages,
+	});
+}))
 
-router.post('/', async (req, res, next) => {
+router.post('/', handleErrorAsync(async (req, res, next) => {
 	const {
 		name,
 		credit_amount,
@@ -42,57 +37,47 @@ router.post('/', async (req, res, next) => {
 		return next(appError(400, '欄位未填寫正確'));
 	}
 
-	try {
-		const isCreditPackageExist = await CreditPackageRepo.findOneBy({ name });
+	const isCreditPackageExist = await CreditPackageRepo.findOneBy({ name });
 
-		if (isCreditPackageExist) {
-			return next(appError(409, '資料重複'));
-		}
-
-		const newCreditPackage = CreditPackageRepo.create({
-			name,
-			credit_amount,
-			price,
-		});
-		const result = await CreditPackageRepo.save(newCreditPackage);
-
-		res.status(200).json({
-			status: 'success',
-			data: {
-				id: result.id,
-				name: result.name,
-				credit_amount: result.credit_amount,
-				price: result.price,
-			},
-		});
-	} catch (error) {
-		logger.error(error);
-		next(error);
+	if (isCreditPackageExist) {
+		return next(appError(409, '資料重複'));
 	}
-});
+
+	const newCreditPackage = CreditPackageRepo.create({
+		name,
+		credit_amount,
+		price,
+	});
+	const result = await CreditPackageRepo.save(newCreditPackage);
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			id: result.id,
+			name: result.name,
+			credit_amount: result.credit_amount,
+			price: result.price,
+		},
+	});
+}));
 
 
-router.delete('/:creditPackageId', async (req, res, next) => {
+router.delete('/:creditPackageId', handleErrorAsync(async (req, res, next) => {
 	const { creditPackageId } = req.params;
 
 	if (isNotValidUUID(creditPackageId)) {
 		return next(appError(404, 'ID錯誤'));
 	}
 
-	try {
-		const result = await CreditPackageRepo.delete(creditPackageId);
+	const result = await CreditPackageRepo.delete(creditPackageId);
 
-		if (result.affected === 0) {
-			return next(appError(404, 'ID錯誤'));
-		}
-
-		res.status(200).json({
-			status: 'success',
-		});
-	} catch (error) {
-		logger.error(error);
-		next(error);
+	if (result.affected === 0) {
+		return next(appError(404, 'ID錯誤'));
 	}
-})
 
-module.exports = router
+	res.status(200).json({
+		status: 'success',
+	});
+}))
+
+module.exports = router;
