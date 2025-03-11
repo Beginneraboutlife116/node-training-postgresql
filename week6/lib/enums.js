@@ -4,6 +4,13 @@ const Role = {
 	ADMIN: 'ADMIN',
 }
 
+const BookingStatus = {
+	BOOKED: 'BOOKED',
+	CANCELLED: 'CANCELLED',
+	CONFIRMED: 'CONFIRMED',
+}
+
 module.exports = {
 	Role,
+	BookingStatus,
 }
