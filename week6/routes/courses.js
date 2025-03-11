@@ -15,7 +15,10 @@ const CourseRepo = dataSource.getRepository('Course');
 const CreditPurchaseRepo = dataSource.getRepository('CreditPurchase');
 const CourseBookingRepo = dataSource.getRepository('CourseBooking');
 
-const { BOOKED } = BookingStatus;
+const {
+	BOOKED,
+	CANCELLED,
+} = BookingStatus;
 
 router.get('/', handleErrorAsync(async(req, res, next) => {
 	const courses = await CourseRepo.createQueryBuilder('ce')
@@ -89,5 +92,40 @@ router.post('/:courseId', isAuth, handleErrorAsync(async (req, res, next) => {
 		data: null,
 	});
 }));
+
+router.delete('/:courseId', isAuth, handleErrorAsync(async (req, res, next) => {
+	const { id: userId } = req.user;
+	const { courseId } = req.params;
+
+	if (isNotValidUUID(courseId)) {
+		return next(appError(400, 'ID錯誤'));
+	}
+
+	const foundCourse = await CourseRepo.findOneBy({ id: courseId });
+
+	if (!foundCourse) {
+		return next(appError(400, '課程不存在'));
+	}
+
+	const foundBookedRecord = await CourseBookingRepo.findOneBy({
+		user_id: userId,
+		course_id: courseId,
+		status: BOOKED,
+	});
+
+	if (!foundBookedRecord) {
+		return next(appError(400, '未報名此課程'));
+	}
+
+	await CourseBookingRepo.update({ id: foundBookedRecord.id }, {
+		status: CANCELLED,
+		cancelled_at: new Date(),
+	});
+
+	res.status(200).json({
+		status: 'success',
+		data: null,
+	});
+}))
 
 module.exports = router;
