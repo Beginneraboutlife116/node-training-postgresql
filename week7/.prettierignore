@@ -1,0 +1,9 @@
+# Ignore artifacts:
+build
+coverage
+
+.github
+docker-compose.yml
+Dockerfile
+package-lock.json
+package.json
