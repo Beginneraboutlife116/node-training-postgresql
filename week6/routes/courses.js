@@ -117,10 +117,14 @@ router.delete('/:courseId', isAuth, handleErrorAsync(async (req, res, next) => {
 		return next(appError(400, '未報名此課程'));
 	}
 
-	await CourseBookingRepo.update({ id: foundBookedRecord.id }, {
+	const updatedBooking = await CourseBookingRepo.update({ id: foundBookedRecord.id }, {
 		status: CANCELLED,
 		cancelled_at: new Date(),
 	});
+
+	if (updatedBooking.affected === 0) {
+		return next(appError(400, '取消報名失敗'));
+	}
 
 	res.status(200).json({
 		status: 'success',
