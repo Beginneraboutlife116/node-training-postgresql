@@ -1,6 +1,6 @@
-const { DataSource } = require('typeorm')
+const { DataSource } = require('typeorm');
 
-const config = require('../config/index')
+const config = require('../config/index');
 
 const dataSource = new DataSource({
   type: 'postgres',
@@ -12,7 +12,7 @@ const dataSource = new DataSource({
   synchronize: config.get('db.synchronize'),
   poolSize: 10,
   entities: ['entities/*.js'],
-  ssl: config.get('db.ssl')
-})
+  ssl: config.get('db.ssl'),
+});
 
-module.exports = { dataSource }
+module.exports = { dataSource };

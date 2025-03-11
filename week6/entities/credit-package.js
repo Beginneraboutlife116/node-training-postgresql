@@ -1,4 +1,4 @@
-const { EntitySchema } = require('typeorm')
+const { EntitySchema } = require('typeorm');
 
 module.exports = new EntitySchema({
   name: 'CreditPackage',
@@ -12,7 +12,7 @@ module.exports = new EntitySchema({
     name: {
       type: 'varchar',
       length: 50,
-      unique: true
+      unique: true,
     },
     credit_amount: {
       type: 'integer',
@@ -25,6 +25,6 @@ module.exports = new EntitySchema({
     created_at: {
       type: 'timestamp',
       createDate: true,
-    }
-  }
-})
+    },
+  },
+});
