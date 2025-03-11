@@ -8,35 +8,28 @@ module.exports = new EntitySchema({
 			primary: true,
 			type: 'uuid',
 			generated: 'uuid',
-			nullable: false,
 		},
 		user_id: {
 			type: 'uuid',
-			nullable: false,
 		},
 		credit_package_id: {
 			type: 'uuid',
-			nullable: false,
 		},
 		purchased_credits: {
 			type: 'integer',
-			nullable: false,
 		},
 		price_paid: {
 			type: 'numeric',
 			precision: 10,
 			scale: 2,
-			nullable: false,
 		},
 		create_at: {
 			type: 'timestamp',
 			createDate: true,
-			nullable: false,
 		},
 		purchase_at: {
 			type: 'timestamp',
 			createDate: true,
-			nullable: false,
 		}
 	},
 	relations: {

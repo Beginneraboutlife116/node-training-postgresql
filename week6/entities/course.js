@@ -8,53 +8,42 @@ module.exports = new EntitySchema({
 			primary: true,
 			type: 'uuid',
 			generated: 'uuid',
-			nullable: false
 		},
 		user_id: {
 			type: 'uuid',
-			nullable: false,
 			unique: true
 		},
 		skill_id: {
 			type: 'uuid',
-			nullable: false
 		},
 		name: {
 			type: 'varchar',
 			length: 100,
-			nullable: false,
 		},
 		description: {
 			type: 'text',
-			nullable: false
 		},
 		start_at: {
 			type: 'timestamp',
-			nullable: false	
 		},
 		end_at: {
 			type: 'timestamp',
-			nullable: false
 		},
 		max_participants: {
 			type: 'integer',
-			nullable: false
 		},
 		meeting_url: {
 			type: 'varchar',
 			length: 2048,
-			nullable: false,
 			unique: true
 		},
 		created_at: {
 			type: 'timestamp',
 			createDate: true,
-			nullable: false
 		},
 		update_at: {
 			type: 'timestamp',
 			updateDate: true,
-			nullable: false
 		}
 	},
 	relations: {

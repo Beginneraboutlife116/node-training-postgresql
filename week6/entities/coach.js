@@ -8,20 +8,16 @@ module.exports = new EntitySchema({
 			primary: true,
 			type: 'uuid',
 			generated: 'uuid',
-			nullable: false
 		},
 		user_id: {
 			type: 'uuid',
-			nullable: false,
 			unique: true
 		},
 		experience_years: {
 			type: 'integer',
-			nullable: false
 		},
 		description: {
 			type: 'text',
-			nullable: false
 		},
 		profile_image_url: {
 			type: 'varchar',
@@ -31,12 +27,10 @@ module.exports = new EntitySchema({
 		created_at: {
 			type: 'timestamp',
 			createDate: true,
-			nullable: false
 		},
 		updated_at: {
 			type: 'timestamp',
 			updateDate: true,
-			nullable: false
 		}
 	},
 	relations: {

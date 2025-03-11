@@ -194,13 +194,14 @@ router.post('/coaches/:userId', [isAuth, isAdmin], handleErrorAsync(async (req, 
 		profile_image_url,
 	});
 	const coachResult = await CoachRepo.save(newCoach);
+	const { name, role } = await UserRepo.findOneBy({ id: userId });
 
 	res.status(201).json({
 		status: 'success',
 		data: {
 			user: {
-				name: foundUser.name,
-				role: foundUser.role,
+				name,
+				role,
 			},
 			coach: coachResult
 		}
