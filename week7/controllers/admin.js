@@ -188,6 +188,48 @@ const updateUserAsCoach = handleErrorAsync(async (req, res, next) => {
   });
 })
 
+const updateUserAsAdmin = handleErrorAsync(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const foundAdmin = await UserRepo.findBy({ role: ADMIN });
+
+  if (foundAdmin.length > 0) {
+    return next(appError(409, '管理員已經存在'));
+  }
+
+  if (isNotValidUUID(userId)) {
+    return next(appError(400, '使用者不存在'));
+  }
+
+  const foundUser = await UserRepo.findOneBy({ id: userId });
+
+  if (!foundUser) {
+    return next(appError(400, '使用者不存在'));
+  }
+
+  if (foundUser.role === ADMIN) {
+    return next(appError(409, '使用者已經是管理員'));
+  }
+
+  const updateUserResult = await UserRepo.update({ id: userId }, { role: ADMIN });
+
+  if (updateUserResult.affected === 0) {
+    return next(appError(400, '更新使用者失敗'));
+  }
+
+  const { name, role } = await UserRepo.findOneBy({ id: userId });
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      user: {
+        name,
+        role,
+      },
+    }
+  })
+})
+
 module.exports = {
   createCourseByCoach,
   updateCourseByCoach,
