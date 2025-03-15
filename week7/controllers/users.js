@@ -15,7 +15,7 @@ const UserRepo = dataSource.getRepository('User');
 const signup = handleErrorAsync(async (req, res, next) => {
   const { email, password, name } = req.body;
 
-  if (isNotValidString(name) || isNotValidEmail(email)) {
+  if (isNotValidString(name) || isNotValidEmail(email) || isNotValidString(password)) {
     return next(appError(400, '欄位未填寫正確'));
   }
 
@@ -52,7 +52,7 @@ const signup = handleErrorAsync(async (req, res, next) => {
 const login = handleErrorAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  if (isNotValidEmail(email)) {
+  if (isNotValidEmail(email) || isNotValidString(password)) {
     return next(appError(400, '欄位未填寫正確'));
   }
 

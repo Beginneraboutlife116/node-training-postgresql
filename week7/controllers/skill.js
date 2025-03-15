@@ -1,24 +1,21 @@
-const express = require('express');
-
 const { dataSource } = require('../db/data-source');
 
 const appError = require('../utils/app-error');
 const { isNotValidString, isNotValidUUID } = require('../utils/validators');
 const handleErrorAsync = require('../utils/handle-error-async');
 
-const router = express.Router();
 const SkillRepo = dataSource.getRepository('Skill');
 
-const getSkills = handleErrorAsync(async (req, res, next) => {
+const getSkills = handleErrorAsync(async (_, res) => {
   const skills = await SkillRepo.find({
     select: ['id', 'name'],
   });
 
   res.status(200).json({
     status: 'success',
-      data: skills,
+    data: skills,
   });
-})
+});
 
 const createSkill = handleErrorAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -43,7 +40,7 @@ const createSkill = handleErrorAsync(async (req, res, next) => {
       name: result.name,
     },
   });
-})
+});
 
 const deleteSkill = handleErrorAsync(async (req, res, next) => {
   const { skillId } = req.params;
@@ -61,7 +58,7 @@ const deleteSkill = handleErrorAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
   });
-})
+});
 
 module.exports = {
   getSkills,

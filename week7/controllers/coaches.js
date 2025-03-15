@@ -63,3 +63,9 @@ const getCoach =  handleErrorAsync(async (req, res, next) => {
       coach: coachData,
     },
   });
+})
+
+module.exports = {
+  getCoaches,
+  getCoach,
+};
