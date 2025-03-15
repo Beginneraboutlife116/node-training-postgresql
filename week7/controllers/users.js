@@ -11,6 +11,7 @@ const { generateToken } = require('../utils/jwt');
 const handleErrorAsync = require('../utils/handle-error-async');
 
 const UserRepo = dataSource.getRepository('User');
+const CreditPurchaseRepo = dataSource.getRepository('CreditPurchase');
 
 const signup = handleErrorAsync(async (req, res, next) => {
   const { email, password, name } = req.body;
@@ -111,7 +112,7 @@ const getUserProfile = handleErrorAsync(async (req, res, next) => {
       },
     },
   });
-})
+});
 
 const updateUserProfile = handleErrorAsync(async (req, res, next) => {
   const { id } = req.user;
@@ -130,7 +131,7 @@ const updateUserProfile = handleErrorAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
   });
-})
+});
 
 const updateUserPassword = handleErrorAsync(async (req, res, next) => {
   const { id } = req.user;
@@ -176,10 +177,31 @@ const updateUserPassword = handleErrorAsync(async (req, res, next) => {
   });
 });
 
+const getUserPurchasedCreditPackages = handleErrorAsync(async (req, res) => {
+  const { id } = req.user;
+
+  const userPurchasedCreditPackages = await CreditPurchaseRepo.createQueryBuilder('cps')
+    .innerJoin('cps.creditPackage', 'cpk')
+    .select([
+      'cps.purchased_credits as purchased_credits',
+      'cps.price_paid as price_paid',
+      'cps.purchase_at as purchase_at',
+      'cpk.name as name',
+    ])
+    .where('cps.user_id = :id', { id })
+    .getRawMany();
+
+  res.status(200).json({
+    status: 'success',
+    data: userPurchasedCreditPackages,
+  });
+});
+
 module.exports = {
   signup,
   login,
   getUserProfile,
   updateUserProfile,
   updateUserPassword,
+  getUserPurchasedCreditPackages,
 };
