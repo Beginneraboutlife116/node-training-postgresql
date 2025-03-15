@@ -132,9 +132,54 @@ const updateUserProfile = handleErrorAsync(async (req, res, next) => {
   });
 })
 
+const updateUserPassword = handleErrorAsync(async (req, res, next) => {
+  const { id } = req.user;
+  const { password, new_password, confirm_new_password } = req.body;
+
+  if (isNotValidString(password) || isNotValidString(new_password) || isNotValidString(confirm_new_password)) {
+    return next(appError(400, '欄位未填寫正確'));
+  }
+
+  if (password === new_password) {
+    return next(appError(400, '新密碼不能與舊密碼相同'));
+  }
+
+  if (new_password !== confirm_new_password) {
+    return next(appError(400, '新密碼與驗證新密碼不一致'));
+  }
+
+  if (isNotValidPassword(new_password)) {
+    return next(appError(400, '新密碼不符合規則，需要包含英文數字大小寫，最短8個字，最長16個字'));
+  }
+
+  const foundUser = await UserRepo.findOne({
+    where: { id },
+    select: ['password'],
+  });
+
+  const isMatch = await bcrypt.compare(password, foundUser.password);
+
+  if (!isMatch) {
+    return next(appError(400, '密碼輸入錯誤'));
+  }
+
+  const hashPassword = await bcrypt.hash(new_password, config.get('secret.saltRounds'));
+  const updateUser = await UserRepo.update({ id }, { password: hashPassword });
+
+  if (updateUser.affected === 0) {
+    return next(appError(400, '更新密碼失敗'));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: null,
+  });
+});
+
 module.exports = {
   signup,
   login,
   getUserProfile,
   updateUserProfile,
+  updateUserPassword,
 };
