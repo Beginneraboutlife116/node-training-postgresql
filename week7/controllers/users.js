@@ -10,8 +10,12 @@ const { isNotValidString, isNotValidEmail, isNotValidPassword } = require('../ut
 const { generateToken } = require('../utils/jwt');
 const handleErrorAsync = require('../utils/handle-error-async');
 
+const { BookingStatus } = require('../lib/enums');
+
 const UserRepo = dataSource.getRepository('User');
 const CreditPurchaseRepo = dataSource.getRepository('CreditPurchase');
+const CourseBookingRepo = dataSource.getRepository('CourseBooking');
+const { COMPLETED } = BookingStatus;
 
 const signup = handleErrorAsync(async (req, res, next) => {
   const { email, password, name } = req.body;
@@ -197,6 +201,40 @@ const getUserPurchasedCreditPackages = handleErrorAsync(async (req, res) => {
   });
 });
 
+const getUserBookCourses = handleErrorAsync(async (req, res) => {
+  const { id } = req.user;
+
+  const userTotalCredits = await CreditPurchaseRepo.sum('purchased_credits', {
+    user_id: id,
+  });
+  const usedCredits = await CourseBookingRepo.count({
+    where: { user_id: id, status: COMPLETED },
+  });
+
+  const userBookedCourses = await CourseBookingRepo.createQueryBuilder('cb')
+    .innerJoin('cb.course', 'c')
+    .innerJoin('cb.user', 'u')
+    .select([
+      'c.name as name',
+      'u.name as coach_name',
+      'cb.status as status',
+      'c.start_at as start_at',
+      'c.end_at as end_at',
+      'c.meeting_url as meeting_url',
+    ])
+    .where('cb.user_id = :id', { id })
+    .getRawMany();
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      credit_remain: userTotalCredits - usedCredits,
+      credit_usage: usedCredits,
+      course_booking: userBookedCourses,
+    },
+  });
+});
+
 module.exports = {
   signup,
   login,
@@ -204,4 +242,5 @@ module.exports = {
   updateUserProfile,
   updateUserPassword,
   getUserPurchasedCreditPackages,
+  getUserBookCourses,
 };

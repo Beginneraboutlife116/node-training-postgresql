@@ -5,9 +5,9 @@ const Role = {
 };
 
 const BookingStatus = {
-  BOOKED: 'BOOKED',
-  CANCELLED: 'CANCELLED',
-  CONFIRMED: 'CONFIRMED',
+  PENDING: 'pending',
+  PROGRESS: 'progress',
+  COMPLETED: 'completed',
 };
 
 module.exports = {

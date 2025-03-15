@@ -1,3 +1,4 @@
+const { IsNull, Not } = require('typeorm');
 const { dataSource } = require('../db/data-source');
 
 const { isNotValidUUID } = require('../utils/validators');
@@ -10,7 +11,7 @@ const CourseRepo = dataSource.getRepository('Course');
 const CreditPurchaseRepo = dataSource.getRepository('CreditPurchase');
 const CourseBookingRepo = dataSource.getRepository('CourseBooking');
 
-const { BOOKED, CANCELLED } = BookingStatus;
+const { PENDING, COMPLETED } = BookingStatus;
 
 const getCourses = handleErrorAsync(async (_, res) => {
   const courses = await CourseRepo.createQueryBuilder('ce')
@@ -32,7 +33,7 @@ const getCourses = handleErrorAsync(async (_, res) => {
     status: 'success',
     data: courses,
   });
-})
+});
 
 const bookCourse = handleErrorAsync(async (req, res, next) => {
   const { id: userId } = req.user;
@@ -47,7 +48,7 @@ const bookCourse = handleErrorAsync(async (req, res, next) => {
   });
   const bookedCourses = await CourseBookingRepo.count({
     user_id: userId,
-    status: BOOKED,
+    cancelled_at: IsNull(),
   });
 
   if (purchasedCredits <= bookedCourses) {
@@ -57,7 +58,9 @@ const bookCourse = handleErrorAsync(async (req, res, next) => {
   const { max_participants } = await CourseRepo.findOneBy({ id: courseId });
   const bookedParticipants = await CourseBookingRepo.count({
     course_id: courseId,
-    status: BOOKED,
+    status: PENDING,
+    join_at: IsNull(),
+    cancelled_at: IsNull(),
   });
 
   if (bookedParticipants >= max_participants) {
@@ -67,7 +70,9 @@ const bookCourse = handleErrorAsync(async (req, res, next) => {
   const hasBookedThisCourse = await CourseBookingRepo.findOneBy({
     user_id: userId,
     course_id: courseId,
-    status: BOOKED,
+    status: PENDING,
+    join_at: IsNull(),
+    cancelled_at: IsNull(),
   });
 
   if (hasBookedThisCourse) {
@@ -85,7 +90,7 @@ const bookCourse = handleErrorAsync(async (req, res, next) => {
     status: 'success',
     data: null,
   });
-})
+});
 
 const cancelCourseBooking = handleErrorAsync(async (req, res, next) => {
   const { id: userId } = req.user;
@@ -104,20 +109,16 @@ const cancelCourseBooking = handleErrorAsync(async (req, res, next) => {
   const foundBookedRecord = await CourseBookingRepo.findOneBy({
     user_id: userId,
     course_id: courseId,
-    status: BOOKED,
+    status: PENDING,
+    join_at: IsNull(),
+    cancelled_at: IsNull(),
   });
 
   if (!foundBookedRecord) {
     return next(appError(400, '未報名此課程'));
   }
 
-  const updatedBooking = await CourseBookingRepo.update(
-    { id: foundBookedRecord.id },
-    {
-      status: CANCELLED,
-      cancelled_at: new Date(),
-    }
-  );
+  const updatedBooking = await CourseBookingRepo.update({ id: foundBookedRecord.id }, { cancelled_at: new Date() });
 
   if (updatedBooking.affected === 0) {
     return next(appError(400, '取消報名失敗'));
@@ -127,7 +128,7 @@ const cancelCourseBooking = handleErrorAsync(async (req, res, next) => {
     status: 'success',
     data: null,
   });
-})
+});
 
 module.exports = {
   getCourses,

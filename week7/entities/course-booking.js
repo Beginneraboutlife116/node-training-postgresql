@@ -2,7 +2,7 @@ const { EntitySchema } = require('typeorm');
 
 const { BookingStatus } = require('../lib/enums');
 
-const { BOOKED } = BookingStatus;
+const { PENDING } = BookingStatus;
 
 module.exports = new EntitySchema({
   name: 'CourseBooking',
@@ -26,7 +26,7 @@ module.exports = new EntitySchema({
     status: {
       type: 'varchar',
       length: 20,
-      default: BOOKED,
+      default: PENDING,
     },
     join_at: {
       type: 'timestamp',
@@ -50,7 +50,7 @@ module.exports = new EntitySchema({
       createDate: true,
     },
   },
-  relation: {
+  relations: {
     user: {
       target: 'User',
       type: 'many-to-one',
