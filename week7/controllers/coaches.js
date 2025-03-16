@@ -76,7 +76,7 @@ const getCoachCourses = handleErrorAsync(async (req, res, next) => {
   const foundCoach = await CoachRepo.findOneBy({ user_id: coachId });
 
   if (!foundCoach) {
-    return next(appError(404, '找不到該教練'));
+    return next(appError(404, '找不到教練'));
   }
 
   const foundCourses = await CourseRepo.createQueryBuilder('ce')
