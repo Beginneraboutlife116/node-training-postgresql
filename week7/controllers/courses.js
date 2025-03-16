@@ -1,4 +1,4 @@
-const { IsNull, Not } = require('typeorm');
+const { IsNull } = require('typeorm');
 const { dataSource } = require('../db/data-source');
 
 const { isNotValidUUID } = require('../utils/validators');
@@ -11,7 +11,7 @@ const CourseRepo = dataSource.getRepository('Course');
 const CreditPurchaseRepo = dataSource.getRepository('CreditPurchase');
 const CourseBookingRepo = dataSource.getRepository('CourseBooking');
 
-const { PENDING, COMPLETED } = BookingStatus;
+const { PENDING } = BookingStatus;
 
 const getCourses = handleErrorAsync(async (_, res) => {
   const courses = await CourseRepo.createQueryBuilder('ce')

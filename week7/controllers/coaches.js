@@ -5,6 +5,7 @@ const { isNotValidString, isNotValidInteger, isNotValidUUID } = require('../util
 const handleErrorAsync = require('../utils/handle-error-async');
 
 const CoachRepo = dataSource.getRepository('Coach');
+const CourseRepo = dataSource.getRepository('Course');
 
 const getCoaches = handleErrorAsync(async (req, res, next) => {
   const { per, page } = req.query;
@@ -32,9 +33,9 @@ const getCoaches = handleErrorAsync(async (req, res, next) => {
     status: 'success',
     data: coaches,
   });
-})
+});
 
-const getCoach =  handleErrorAsync(async (req, res, next) => {
+const getCoach = handleErrorAsync(async (req, res, next) => {
   const { coachId } = req.params;
 
   if (isNotValidUUID(coachId)) {
@@ -63,9 +64,45 @@ const getCoach =  handleErrorAsync(async (req, res, next) => {
       coach: coachData,
     },
   });
-})
+});
+
+const getCoachCourses = handleErrorAsync(async (req, res, next) => {
+  const { coachId } = req.params;
+
+  if (isNotValidUUID(coachId)) {
+    return next(appError(400, '欄位未填寫正確'));
+  }
+
+  const foundCoach = await CoachRepo.findOneBy({ user_id: coachId });
+
+  if (!foundCoach) {
+    return next(appError(404, '找不到該教練'));
+  }
+
+  const foundCourses = await CourseRepo.createQueryBuilder('ce')
+    .innerJoin('ce.user', 'u')
+    .innerJoin('ce.skill', 's')
+    .where('u.id = :coachId', { coachId })
+    .select([
+      'ce.id as id',
+      'u.name as coach_name',
+      's.name as skill_name',
+      'ce.name as name',
+      'description',
+      'start_at',
+      'end_at',
+      'max_participants',
+    ])
+    .getRawMany();
+
+  res.status(200).json({
+    status: 'success',
+    data: foundCourses,
+  });
+});
 
 module.exports = {
   getCoaches,
   getCoach,
+  getCoachCourses,
 };
